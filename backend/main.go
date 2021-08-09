@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"github.com/joho/godotenv"
 )
 
 type Duck struct {
@@ -53,7 +56,6 @@ type Photo struct {
 
 // MongoDB global variables
 var (
-	mongoURI string = "mongodb+srv://mtsiang:030507mc@cluster0.dkc5m.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 	database string = "duck-walk"
 	ctx context.Context
 	ctxCancel context.CancelFunc
@@ -77,7 +79,7 @@ func createDuck(w http.ResponseWriter, r *http.Request) {
 }
 
 func connectToMongoDB(ctx context.Context) *mongo.Client {
-	client, err := mongo.NewClient(options.Client().ApplyURI(mongoURI))
+	client, err := mongo.NewClient(options.Client().ApplyURI(os.Getenv("MONGODB_URI")))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -89,6 +91,9 @@ func connectToMongoDB(ctx context.Context) *mongo.Client {
 }
 
 func main() {
+	// Load env variables
+	godotenv.Load()
+	
 	// Connect to mongodb
 	ctx, ctxCancel = context.WithTimeout(context.Background(), 10*time.Second)
     client = connectToMongoDB(ctx)
